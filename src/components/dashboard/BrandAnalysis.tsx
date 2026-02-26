@@ -34,10 +34,8 @@ const MOIS_ORDER = ["JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUIL
 function trendByTime(data: ComputedRecord[]) {
   const brands = [...new Set(data.map((d) => d.brand))];
   const uniqueMonths = [...new Set(data.map((d) => d.mois))];
-  
   const useWeeks = uniqueMonths.length === 1;
   const groupByField = useWeeks ? "codeWeek" : "mois";
-  
   const g = groupBy(data, (d) => d[groupByField]);
   const timeLabels = Object.keys(g).sort((a, b) => {
     if (useWeeks) return a.localeCompare(b);
@@ -46,37 +44,47 @@ function trendByTime(data: ComputedRecord[]) {
 
   return {
     data: timeLabels.map((time) => {
-      const entry: Record<string, string | number> = { 
-        time: useWeeks ? time.replace(/^\d{4}W/, "S") : time.slice(0, 4) 
+      const entry: Record<string, string | number> = {
+        time: useWeeks ? time.replace(/^\d{4}W/, "S") : time.slice(0, 4)
       };
       brands.forEach((brand) => {
-        entry[brand] = sumField(
-          g[time]?.filter((d) => d.brand === brand) || [],
-          "sellOut"
-        );
+        entry[brand] = sumField(g[time]?.filter((d) => d.brand === brand) || [], "sellOut");
       });
       return entry;
     }),
-    label: useWeeks ? "Évolution hebdomadaire" : "Évolution mensuelle"
+    label: useWeeks ? "Évolution hebdomadaire" : "Évolution mensuelle",
+    brands,
   };
 }
 
 export default function BrandAnalysis({ data }: Props) {
   const agg = brandAgg(data);
-  const brands = [...new Set(data.map((d) => d.brand))];
   const trend = trendByTime(data);
   const fmt = (v: number) => `${(v / 1000).toFixed(1)}k`;
 
+  const chartConfigs = [
+    { key: "volume" as const, label: "Volume par Marque", color: COLORS[0], isCurrency: false },
+    { key: "ca" as const, label: "CA par Marque ($)", color: COLORS[1], isCurrency: true },
+    { key: "marge" as const, label: "Marge Moyenne par Marque ($)", color: COLORS[2], isCurrency: true },
+  ];
+
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-foreground">📊 Analyse par Marque</h2>
+      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-info/20 text-info text-sm">📊</span>
+        Analyse par Marque
+      </h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {[
-          { key: "volume" as const, label: "Volume par Marque", color: COLORS[0] },
-          { key: "ca" as const, label: "CA par Marque ($)", color: COLORS[1] },
-          { key: "marge" as const, label: "Marge Moyenne par Marque ($)", color: COLORS[2] },
-        ].map(({ key, label, color }) => (
-          <ChartContainer key={key} title={label}>
+        {chartConfigs.map(({ key, label, color, isCurrency }) => (
+          <ChartContainer
+            key={key}
+            title={label}
+            tableData={agg.map((r) => ({ Marque: r.brand, Valeur: r[key] }))}
+            tableColumns={[
+              { key: "Marque", label: "Marque" },
+              { key: "Valeur", label: key === "volume" ? "Volume" : key === "ca" ? "CA ($)" : "Marge ($)", isCurrency: isCurrency },
+            ]}
+          >
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={agg} layout="vertical" margin={{ left: 10, right: 10 }}>
                 <XAxis type="number" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} tickFormatter={key !== "volume" ? fmt : undefined} />
@@ -88,7 +96,19 @@ export default function BrandAnalysis({ data }: Props) {
           </ChartContainer>
         ))}
       </div>
-      <ChartContainer title={`${trend.label} du volume par Marque`}>
+
+      <ChartContainer
+        title={`${trend.label} du volume par Marque`}
+        tableData={trend.data.map((r) => {
+          const row: Record<string, string | number> = { Période: r.time as string };
+          trend.brands.forEach((b) => { row[b] = r[b] as number; });
+          return row;
+        })}
+        tableColumns={[
+          { key: "Période", label: "Période" },
+          ...trend.brands.map((b) => ({ key: b, label: b })),
+        ]}
+      >
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={trend.data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,12%,25%)" />
@@ -96,7 +116,7 @@ export default function BrandAnalysis({ data }: Props) {
             <YAxis tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} />
             <Tooltip {...tooltipStyle} />
             <Legend wrapperStyle={{ color: "hsl(210,20%,85%)" }} />
-            {brands.map((brand, i) => (
+            {trend.brands.map((brand, i) => (
               <Line key={brand} type="monotone" dataKey={brand} stroke={COLORS[i % COLORS.length]} strokeWidth={2} dot={{ r: 3 }} />
             ))}
           </LineChart>

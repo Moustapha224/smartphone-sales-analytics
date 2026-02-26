@@ -23,40 +23,69 @@ export default function GeoAnalysis({ data }: Props) {
   const byDistrict = agg(data, "district", "ca").slice(0, 10);
   const byChannel = agg(data, "distributionChannel", "sellOut").filter((d) => d.name);
 
+  const charts = [
+    {
+      data: byZone,
+      title: "Volume par Zone",
+      color: "hsl(215,70%,55%)",
+      isCurrency: false,
+      layout: "vertical" as const,
+      colLabel: "Volume",
+    },
+    {
+      data: byDistrict,
+      title: "CA par District (Top 10, $)",
+      color: "hsl(150,55%,45%)",
+      isCurrency: true,
+      layout: "horizontal" as const,
+      colLabel: "CA ($)",
+    },
+    {
+      data: byChannel,
+      title: "Volume par Canal de Distribution",
+      color: "hsl(35,85%,55%)",
+      isCurrency: false,
+      layout: "vertical" as const,
+      colLabel: "Volume",
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-foreground">🌍 Analyse Géographique</h2>
+      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/20 text-primary text-sm">🌍</span>
+        Analyse Géographique
+      </h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ChartContainer title="Volume par Zone">
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={byZone}>
-              <XAxis dataKey="name" tick={{ fill: "hsl(210,20%,85%)", fontSize: 10 }} />
-              <YAxis tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} />
-              <Tooltip {...tooltipStyle} />
-              <Bar dataKey="value" fill="hsl(215,70%,55%)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-        <ChartContainer title="CA par District (Top 10, $)">
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={byDistrict} layout="vertical" margin={{ left: 10 }}>
-              <XAxis type="number" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} />
-              <YAxis dataKey="name" type="category" tick={{ fill: "hsl(210,20%,85%)", fontSize: 10 }} width={100} />
-              <Tooltip {...tooltipStyle} formatter={(v: number) => `${v.toLocaleString("fr-FR")} $`} />
-              <Bar dataKey="value" fill="hsl(150,55%,45%)" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-        <ChartContainer title="Volume par Canal de Distribution">
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={byChannel}>
-              <XAxis dataKey="name" tick={{ fill: "hsl(210,20%,85%)", fontSize: 10 }} />
-              <YAxis tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} />
-              <Tooltip {...tooltipStyle} />
-              <Bar dataKey="value" fill="hsl(35,85%,55%)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        {charts.map(({ data: d, title, color, isCurrency, layout, colLabel }) => (
+          <ChartContainer
+            key={title}
+            title={title}
+            tableData={d.map((r) => ({ Nom: r.name, Valeur: r.value }))}
+            tableColumns={[
+              { key: "Nom", label: "Nom" },
+              { key: "Valeur", label: colLabel, isCurrency },
+            ]}
+          >
+            <ResponsiveContainer width="100%" height={250}>
+              {layout === "horizontal" ? (
+                <BarChart data={d} layout="vertical" margin={{ left: 10 }}>
+                  <XAxis type="number" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: "hsl(210,20%,85%)", fontSize: 10 }} width={100} />
+                  <Tooltip {...tooltipStyle} formatter={(v: number) => isCurrency ? `${v.toLocaleString("fr-FR")} $` : v.toLocaleString("fr-FR")} />
+                  <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} />
+                </BarChart>
+              ) : (
+                <BarChart data={d}>
+                  <XAxis dataKey="name" tick={{ fill: "hsl(210,20%,85%)", fontSize: 10 }} />
+                  <YAxis tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} />
+                  <Tooltip {...tooltipStyle} formatter={(v: number) => isCurrency ? `${v.toLocaleString("fr-FR")} $` : v.toLocaleString("fr-FR")} />
+                  <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              )}
+            </ResponsiveContainer>
+          </ChartContainer>
+        ))}
       </div>
     </div>
   );

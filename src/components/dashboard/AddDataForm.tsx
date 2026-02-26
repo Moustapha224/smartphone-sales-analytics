@@ -31,7 +31,7 @@ export default function AddDataForm({ onDataAdded }: Props) {
   };
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 space-y-6 shadow-sm">
+    <div className="glass-card p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
           <Plus size={24} className="text-primary" /> Gestion des Données

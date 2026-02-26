@@ -41,7 +41,7 @@ export default function SalesDataTable({ data }: SalesDataTableProps) {
     );
 
     return (
-        <div className="bg-card rounded-xl border border-border p-5 space-y-4 shadow-sm">
+        <div className="glass-card p-5 space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h2 className="text-lg font-bold text-foreground">Détail des Ventes</h2>
                 <div className="relative w-full sm:w-80">

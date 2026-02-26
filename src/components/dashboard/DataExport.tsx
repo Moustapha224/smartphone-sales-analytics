@@ -58,7 +58,7 @@ export default function DataExport({ data }: DataExportProps) {
     return (
         <Button
             onClick={handleExportExcel}
-            className="bg-green-600 text-white hover:bg-green-700 font-medium px-4 py-2 text-sm shadow flex items-center gap-2"
+            className="bg-accent text-accent-foreground hover:brightness-110 font-medium px-3 py-2 text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-all"
         >
             <Download size={16} />
             <span>Export Excel</span>

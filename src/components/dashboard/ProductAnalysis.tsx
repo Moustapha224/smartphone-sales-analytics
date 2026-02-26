@@ -50,17 +50,28 @@ export default function ProductAnalysis({ data }: Props) {
   }, [data, selected]);
 
   const charts = [
-    { data: topVol, label: "Top 10 - Volume", color: "hsl(215,70%,55%)", isCurrency: false },
-    { data: topCA, label: "Top 10 - CA ($)", color: "hsl(150,55%,45%)", isCurrency: true },
-    { data: topMarge, label: "Top 10 - Marge Moyenne ($)", color: "hsl(35,85%,55%)", isCurrency: true },
+    { data: topVol, label: "Top 10 - Volume", color: "hsl(215,70%,55%)", isCurrency: false, colLabel: "Volume" },
+    { data: topCA, label: "Top 10 - CA ($)", color: "hsl(150,55%,45%)", isCurrency: true, colLabel: "CA ($)" },
+    { data: topMarge, label: "Top 10 - Marge Moyenne ($)", color: "hsl(35,85%,55%)", isCurrency: true, colLabel: "Marge ($)" },
   ];
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-foreground">📱 Analyse Produit</h2>
+      <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-warning/20 text-warning text-sm">📱</span>
+        Analyse Produit
+      </h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {charts.map(({ data: d, label, color, isCurrency }) => (
-          <ChartContainer key={label} title={label}>
+        {charts.map(({ data: d, label, color, isCurrency, colLabel }) => (
+          <ChartContainer
+            key={label}
+            title={label}
+            tableData={d.map((r) => ({ Produit: r.product, Valeur: r.value }))}
+            tableColumns={[
+              { key: "Produit", label: "Produit" },
+              { key: "Valeur", label: colLabel, isCurrency },
+            ]}
+          >
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={d} layout="vertical" margin={{ left: 5 }}>
                 <XAxis type="number" tick={{ fill: "hsl(215,15%,55%)", fontSize: 11 }} />
@@ -73,7 +84,14 @@ export default function ProductAnalysis({ data }: Props) {
         ))}
       </div>
 
-      <ChartContainer title="Détail Mensuel par Produit">
+      <ChartContainer
+        title="Détail Mensuel par Produit"
+        tableData={monthlyData.map((r) => ({ Mois: r.mois, Volume: r.volume }))}
+        tableColumns={[
+          { key: "Mois", label: "Mois" },
+          { key: "Volume", label: "Volume" },
+        ]}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-6">
           <select
             value={selected}

@@ -27,7 +27,7 @@ export default function DashboardFilters({ filters, onChange, options }: Props) 
   const formatOptions = (values: string[]) => values.map(v => ({ label: v, value: v }));
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4">
+    <div className="glass-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Filter size={16} className="text-primary" />
